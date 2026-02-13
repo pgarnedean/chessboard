@@ -238,7 +238,6 @@
         #lyrics-container {
             height: 100%;
             overflow-y: scroll;
-            /* 修正点: 左右にパディングを追加して文字被りを防ぐ */
             padding: 50% 40px; 
             box-sizing: border-box;
             scroll-behavior: smooth;
@@ -256,17 +255,15 @@
             color: var(--secondary-color);
             cursor: pointer;
             transition: all 0.4s ease;
-            /* 修正点: コンテナでパディングを取ったので、ここは微調整 */
             padding-left: 0;
             border-radius: 8px;
-            /* 長い歌詞でも枠内に収める */
             word-wrap: break-word; 
         }
 
         .lyric-line.active {
             color: #fff;
             transform: scale(1.1);
-            transform-origin: left center; /* 拡大時に左にズレないように軸を設定 */
+            transform-origin: left center;
             text-shadow: 0 0 20px rgba(255,255,255,0.3);
         }
 
@@ -423,6 +420,7 @@
 
     let currentTrackIndex = 0;
     let isDragging = false;
+    let isVolumeDragging = false; // 音量バー操作中フラグ
 
     function init() {
         trackListEl.innerHTML = '';
@@ -437,7 +435,6 @@
             trackListEl.appendChild(li);
         });
 
-        // クリックイベントを確実に拾うための設定
         document.querySelectorAll('.track-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const idx = e.currentTarget.getAttribute('data-index');
@@ -447,7 +444,6 @@
 
         renderLyrics();
         
-        // 音量初期化
         audio.volume = 0.8;
         volumeBar.value = 80;
     }
@@ -479,11 +475,9 @@
         const fileName = tracks[index].file;
         currentTitleEl.innerText = tracks[index].title;
         
-        // 音声ソースの設定
         audio.src = fileName;
-        audio.load(); // 明示的にロードを開始
+        audio.load();
 
-        // ロード完了を待ってから再生
         const playPromise = audio.play();
         if (playPromise !== undefined) {
             playPromise.then(_ => {
@@ -574,18 +568,27 @@
     });
 
     // --- 音量操作イベント ---
+    // 1. スライダー操作時に音量を変更
     volumeBar.addEventListener('input', (e) => {
+        isVolumeDragging = true;
         audio.volume = e.target.value / 100;
     });
 
-    // オーディオ自体の音量変更（ミュートボタン等含む）があった場合にバーを連動させる
+    volumeBar.addEventListener('change', () => {
+        isVolumeDragging = false;
+    });
+
+    // 2. 音量（内部データ）が変更されたらスライダーを連動
     audio.addEventListener('volumechange', () => {
-        volumeBar.value = Math.round(audio.volume * 100);
+        // スライダーを手動操作中以外の場合のみ、スライダー位置を自動更新
+        if (!isVolumeDragging) {
+            volumeBar.value = Math.round(audio.volume * 100);
+        }
     });
 
     // --- キーボード操作イベント ---
     document.addEventListener('keydown', (e) => {
-        // 曲選択画面でない場合のみ有効
+        // ホーム画面では無効
         if (!homeScreen.classList.contains('hidden')) return;
 
         switch(e.code) {
@@ -594,12 +597,23 @@
                 togglePlay();
                 break;
             case 'ArrowRight':
+                e.preventDefault();
                 if (!isNaN(audio.duration)) {
                     audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
                 }
                 break;
             case 'ArrowLeft':
+                e.preventDefault();
                 audio.currentTime = Math.max(0, audio.currentTime - 10);
+                break;
+            // 音量操作（PCキーボードの矢印キー上下に対応）
+            case 'ArrowUp':
+                e.preventDefault();
+                audio.volume = Math.min(1, audio.volume + 0.1); // 10%ずつアップ
+                break;
+            case 'ArrowDown':
+                e.preventDefault();
+                audio.volume = Math.max(0, audio.volume - 0.1); // 10%ずつダウン
                 break;
         }
     });
