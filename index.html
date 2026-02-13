@@ -229,6 +229,7 @@
         .right-panel {
             flex: 1.5;
             position: relative;
+            /* 上下のフェードマスク */
             mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
             -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
             overflow: hidden;
@@ -237,7 +238,8 @@
         #lyrics-container {
             height: 100%;
             overflow-y: scroll;
-            padding: 50% 0;
+            /* 修正点: 左右にパディングを追加して文字被りを防ぐ */
+            padding: 50% 40px; 
             box-sizing: border-box;
             scroll-behavior: smooth;
         }
@@ -254,13 +256,17 @@
             color: var(--secondary-color);
             cursor: pointer;
             transition: all 0.4s ease;
-            padding-left: 20px;
+            /* 修正点: コンテナでパディングを取ったので、ここは微調整 */
+            padding-left: 0;
             border-radius: 8px;
+            /* 長い歌詞でも枠内に収める */
+            word-wrap: break-word; 
         }
 
         .lyric-line.active {
             color: #fff;
             transform: scale(1.1);
+            transform-origin: left center; /* 拡大時に左にズレないように軸を設定 */
             text-shadow: 0 0 20px rgba(255,255,255,0.3);
         }
 
@@ -285,6 +291,9 @@
                 font-size: 18px;
                 text-align: center;
                 padding-left: 0;
+            }
+            .lyric-line.active {
+                transform-origin: center center;
             }
         }
     </style>
@@ -437,7 +446,10 @@
         });
 
         renderLyrics();
+        
+        // 音量初期化
         audio.volume = 0.8;
+        volumeBar.value = 80;
     }
 
     function renderLyrics() {
@@ -561,8 +573,35 @@
         audio.currentTime = (progressBar.value / 100) * audio.duration;
     });
 
+    // --- 音量操作イベント ---
     volumeBar.addEventListener('input', (e) => {
         audio.volume = e.target.value / 100;
+    });
+
+    // オーディオ自体の音量変更（ミュートボタン等含む）があった場合にバーを連動させる
+    audio.addEventListener('volumechange', () => {
+        volumeBar.value = Math.round(audio.volume * 100);
+    });
+
+    // --- キーボード操作イベント ---
+    document.addEventListener('keydown', (e) => {
+        // 曲選択画面でない場合のみ有効
+        if (!homeScreen.classList.contains('hidden')) return;
+
+        switch(e.code) {
+            case 'Space':
+                e.preventDefault(); // スクロール防止
+                togglePlay();
+                break;
+            case 'ArrowRight':
+                if (!isNaN(audio.duration)) {
+                    audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
+                }
+                break;
+            case 'ArrowLeft':
+                audio.currentTime = Math.max(0, audio.currentTime - 10);
+                break;
+        }
     });
 
     function syncLyrics(currentTime) {
