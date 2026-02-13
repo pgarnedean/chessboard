@@ -19,14 +19,13 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--primary-color);
-            overflow: hidden; /* スクロール防止 */
+            overflow: hidden;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        /* 背景のぼかし効果 */
         .background-blur {
             position: absolute;
             top: -10%;
@@ -40,7 +39,6 @@
             z-index: -1;
         }
 
-        /* ホーム画面（曲選択） */
         #home-screen {
             position: absolute;
             top: 0;
@@ -91,7 +89,6 @@
             transform: scale(1.02);
         }
 
-        /* メインプレーヤーレイアウト */
         #player-container {
             display: flex;
             width: 90%;
@@ -100,7 +97,6 @@
             gap: 40px;
         }
 
-        /* 左側：コントロールとジャケット */
         .left-panel {
             flex: 1;
             display: flex;
@@ -142,7 +138,6 @@
             color: var(--secondary-color);
         }
 
-        /* スライダー（プログレスバー・音量） */
         .slider-container {
             width: 100%;
             margin-bottom: 10px;
@@ -186,7 +181,6 @@
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
 
-        /* 操作ボタン */
         .buttons {
             display: flex;
             justify-content: center;
@@ -219,7 +213,6 @@
             height: 48px;
         }
 
-        /* 戻るボタン */
         .back-btn {
             position: absolute;
             top: 20px;
@@ -233,44 +226,36 @@
             z-index: 50;
         }
 
-        /* 右側：歌詞表示 */
         .right-panel {
             flex: 1.5;
             position: relative;
             mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
             -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
-            overflow: hidden; /* スクロールバーを隠すため */
+            overflow: hidden;
         }
 
         #lyrics-container {
             height: 100%;
             overflow-y: scroll;
-            padding: 50% 0; /* 中央寄せのためのパディング */
+            padding: 50% 0;
             box-sizing: border-box;
             scroll-behavior: smooth;
         }
 
-        /* スクロールバー非表示 */
         #lyrics-container::-webkit-scrollbar {
             display: none;
         }
 
         .lyric-line {
-            font-size: 24px; /* macOS風の大きな文字 */
+            font-size: 24px;
             font-weight: 600;
             line-height: 1.6;
             margin: 20px 0;
             color: var(--secondary-color);
             cursor: pointer;
             transition: all 0.4s ease;
-            transform-origin: left center;
             padding-left: 20px;
             border-radius: 8px;
-        }
-
-        .lyric-line:hover {
-            color: rgba(255,255,255,0.8);
-            background: rgba(255,255,255,0.05);
         }
 
         .lyric-line.active {
@@ -279,7 +264,6 @@
             text-shadow: 0 0 20px rgba(255,255,255,0.3);
         }
 
-        /* スマホ対応 */
         @media (max-width: 768px) {
             #player-container {
                 flex-direction: column;
@@ -291,7 +275,7 @@
                 min-width: auto;
             }
             .album-art {
-                width: 150px; /* 小さくする */
+                width: 150px;
                 margin-bottom: 10px;
             }
             .right-panel {
@@ -301,7 +285,6 @@
                 font-size: 18px;
                 text-align: center;
                 padding-left: 0;
-                transform-origin: center;
             }
         }
     </style>
@@ -312,8 +295,7 @@
 
     <div id="home-screen">
         <h1 style="margin-bottom: 30px; text-shadow: 0 4px 10px rgba(0,0,0,0.5);">Chessboard Player</h1>
-        <ul class="track-list" id="track-list">
-            </ul>
+        <ul class="track-list" id="track-list"></ul>
     </div>
 
     <button class="back-btn" id="back-to-home" style="display:none;">← Song Select</button>
@@ -321,19 +303,16 @@
     <div id="player-container">
         <div class="left-panel">
             <div class="album-art"></div>
-            
             <div class="controls">
                 <div class="song-info">
                     <div class="song-title" id="current-title">Select a song</div>
                     <div class="song-artist">Official髭男dism (Cover/Practice)</div>
                 </div>
-
                 <div class="slider-container">
                     <span class="time-display" id="current-time">0:00</span>
                     <input type="range" id="progress-bar" value="0" min="0" max="100">
                     <span class="time-display" id="duration">0:00</span>
                 </div>
-
                 <div class="buttons">
                     <button class="btn" id="prev-btn">
                         <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
@@ -346,24 +325,20 @@
                         <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
                     </button>
                 </div>
-
                 <div class="slider-container" style="margin-top: 20px; justify-content: center;">
                     <svg style="width:16px; height:16px; fill:#fff; opacity:0.7;" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
                     <input type="range" id="volume-bar" value="80" min="0" max="100" style="width: 60%;">
                 </div>
             </div>
         </div>
-
         <div class="right-panel">
-            <div id="lyrics-container">
-                </div>
+            <div id="lyrics-container"></div>
         </div>
     </div>
 
-    <audio id="audio-player"></audio>
+    <audio id="audio-player" preload="auto"></audio>
 
 <script>
-    // 曲データ（実際のファイル名と完全に一致させました）
     const tracks = [
         { title: "Chessboard (伴奏のみ)", file: "1.mp3" },
         { title: "Chessboard (伴奏＆T)", file: "2.mp3" },
@@ -371,9 +346,7 @@
         { title: "Chessboard (伴奏＆Bs)", file: "4.mp3" },
         { title: "Chessboard (伴奏＆全)", file: "5.mp3" }
     ];
-    
-    // 歌詞データ（重要：timeの値は秒数です。実際の曲に合わせて調整してください）
-    // ここでは一般的な曲のテンポに合わせて仮の時間を設定しています。
+
     const lyricsData = [
         { time: 0.0, text: "（イントロ）" },
         { time: 14.0, text: "チェスボードみたいな" },
@@ -423,7 +396,6 @@
         { time: 200.0, text: "（終了）" }
     ];
 
-    // DOM要素
     const audio = document.getElementById('audio-player');
     const playBtn = document.getElementById('play-btn');
     const prevBtn = document.getElementById('prev-btn');
@@ -441,15 +413,14 @@
     const currentTitleEl = document.getElementById('current-title');
 
     let currentTrackIndex = 0;
-    let isDragging = false; // シークバー操作中フラグ
+    let isDragging = false;
 
-    // 初期化
     function init() {
-        // トラックリスト生成
+        trackListEl.innerHTML = '';
         tracks.forEach((track, index) => {
             const li = document.createElement('li');
             li.innerHTML = `
-                <button class="track-btn" onclick="selectTrack(${index})">
+                <button class="track-btn" data-index="${index}">
                     <span>${track.title}</span>
                     <span>▶</span>
                 </button>
@@ -457,81 +428,89 @@
             trackListEl.appendChild(li);
         });
 
-        // 歌詞生成
+        // クリックイベントを確実に拾うための設定
+        document.querySelectorAll('.track-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = e.currentTarget.getAttribute('data-index');
+                selectTrack(parseInt(idx));
+            });
+        });
+
         renderLyrics();
-        
-        // 初期音量
         audio.volume = 0.8;
     }
 
-    // 歌詞描画
     function renderLyrics() {
         lyricsContainer.innerHTML = '';
         lyricsData.forEach((line, index) => {
             const div = document.createElement('div');
             div.classList.add('lyric-line');
             div.innerText = line.text;
-            div.dataset.time = line.time;
-            div.dataset.index = index;
-            
-            // クリックでその時間にシーク
             div.addEventListener('click', () => {
-                audio.currentTime = line.time;
-                if(audio.paused) togglePlay();
+                if(!isNaN(audio.duration)) {
+                    audio.currentTime = line.time;
+                    if(audio.paused) togglePlay();
+                }
             });
-            
             lyricsContainer.appendChild(div);
         });
     }
 
-    // 曲選択
-    window.selectTrack = function(index) {
+    function selectTrack(index) {
         currentTrackIndex = index;
-        loadTrack(index);
         homeScreen.classList.add('hidden');
         backBtn.style.display = 'block';
-        togglePlay(); // 自動再生
-    };
+        loadTrack(index);
+    }
 
-    // 曲ロード（エラーチェック機能付き）
     function loadTrack(index) {
         const fileName = tracks[index].file;
-        console.log("読み込み開始:", fileName); 
-        
-        audio.src = fileName;
         currentTitleEl.innerText = tracks[index].title;
+        
+        // 音声ソースの設定
+        audio.src = fileName;
+        audio.load(); // 明示的にロードを開始
 
-        // 【ここがエラーチェック】ファイルが読み込めなかった時に実行される
+        // ロード完了を待ってから再生
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.then(_ => {
+                updatePlayInterface(true);
+            }).catch(error => {
+                console.log("Auto-play blocked or error:", error);
+                updatePlayInterface(false);
+            });
+        }
+
         audio.onerror = function() {
-            alert("❌ エラーが発生しました！\n\n" +
-                  "【原因の可能性】\n" +
-                  "1. GitHubに「" + fileName + "」というファイルが存在しない\n" +
-                  "2. ファイル名の大文字・小文字が1文字でも違う\n" +
-                  "3. まだGitHubに反映されていない（数分待つ）\n\n" +
-                  "現在のファイル設定: " + fileName);
+            console.error("Audio error:", audio.error);
+            alert("❌ 曲を読み込めませんでした: " + fileName + "\nGitHubの更新が反映されるまで1分ほど待ってから再読み込みしてください。");
         };
 
         renderLyrics(); 
     }
 
-    // 再生・一時停止切り替え（エラーチェック付き）
     function togglePlay() {
         if (audio.paused) {
             audio.play().then(() => {
-                playIcon.style.display = 'none';
-                pauseIcon.style.display = 'block';
-            }).catch(error => {
-                console.error("再生失敗:", error);
-                alert("再生できませんでした。画面を一度クリックしてから再生ボタンを押してみてください。");
-            });
+                updatePlayInterface(true);
+            }).catch(e => alert("再生ボタンをもう一度押してください。"));
         } else {
             audio.pause();
+            updatePlayInterface(false);
+        }
+    }
+
+    function updatePlayInterface(isPlaying) {
+        if(isPlaying) {
+            playIcon.style.display = 'none';
+            pauseIcon.style.display = 'block';
+        } else {
             playIcon.style.display = 'block';
             pauseIcon.style.display = 'none';
         }
     }
 
-    // タイムフォーマット変換 (秒 -> mm:ss)
     function formatTime(seconds) {
         if(isNaN(seconds)) return "0:00";
         const min = Math.floor(seconds / 60);
@@ -539,36 +518,31 @@
         return `${min}:${sec < 10 ? '0' : ''}${sec}`;
     }
 
-    // イベントリスナー設定
-
     playBtn.addEventListener('click', togglePlay);
 
     backBtn.addEventListener('click', () => {
         homeScreen.classList.remove('hidden');
         backBtn.style.display = 'none';
+        audio.pause();
+        updatePlayInterface(false);
     });
 
     nextBtn.addEventListener('click', () => {
         currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
         loadTrack(currentTrackIndex);
-        togglePlay();
     });
 
     prevBtn.addEventListener('click', () => {
         currentTrackIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
         loadTrack(currentTrackIndex);
-        togglePlay();
     });
 
-    // プログレスバー更新 & 歌詞同期
     audio.addEventListener('timeupdate', () => {
         if (!isDragging) {
             const percent = (audio.currentTime / audio.duration) * 100;
             progressBar.value = isNaN(percent) ? 0 : percent;
             currentTimeEl.innerText = formatTime(audio.currentTime);
         }
-        
-        // 歌詞の同期処理
         syncLyrics(audio.currentTime);
     });
 
@@ -576,12 +550,6 @@
         durationEl.innerText = formatTime(audio.duration);
     });
 
-    audio.addEventListener('ended', () => {
-        playIcon.style.display = 'block';
-        pauseIcon.style.display = 'none';
-    });
-
-    // シークバー操作
     progressBar.addEventListener('input', () => {
         isDragging = true;
         const time = (progressBar.value / 100) * audio.duration;
@@ -590,18 +558,14 @@
 
     progressBar.addEventListener('change', () => {
         isDragging = false;
-        const time = (progressBar.value / 100) * audio.duration;
-        audio.currentTime = time;
+        audio.currentTime = (progressBar.value / 100) * audio.duration;
     });
 
-    // 音量操作
     volumeBar.addEventListener('input', (e) => {
         audio.volume = e.target.value / 100;
     });
 
-    // 歌詞同期ロジック
     function syncLyrics(currentTime) {
-        // 現在の時間より前の最後の歌詞を見つける
         let activeIndex = -1;
         for (let i = 0; i < lyricsData.length; i++) {
             if (lyricsData[i].time <= currentTime) {
@@ -611,30 +575,20 @@
             }
         }
 
-        // クラスの更新
         const lines = document.querySelectorAll('.lyric-line');
         lines.forEach((line, index) => {
             if (index === activeIndex) {
-                line.classList.add('active');
-                // 自動スクロール（アクティブな歌詞を中央へ）
-                line.scrollIntoView({ behavior: "smooth", block: "center" });
+                if(!line.classList.contains('active')) {
+                    line.classList.add('active');
+                    line.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
             } else {
                 line.classList.remove('active');
             }
         });
     }
 
-    // キーボード操作（スペースキーで再生停止）
-    document.addEventListener('keydown', (e) => {
-        if(e.code === 'Space' && homeScreen.classList.contains('hidden')) {
-            e.preventDefault(); // スクロール防止
-            togglePlay();
-        }
-    });
-
-    // 開始
     init();
-
 </script>
 </body>
 </html>
