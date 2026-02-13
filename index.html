@@ -493,20 +493,37 @@
         togglePlay(); // 自動再生
     };
 
-    // 曲ロード
+    // 曲ロード（エラーチェック機能付き）
     function loadTrack(index) {
-        audio.src = tracks[index].file;
+        const fileName = tracks[index].file;
+        console.log("読み込み開始:", fileName); 
+        
+        audio.src = fileName;
         currentTitleEl.innerText = tracks[index].title;
-        // 歌詞位置リセット
+
+        // 【ここがエラーチェック】ファイルが読み込めなかった時に実行される
+        audio.onerror = function() {
+            alert("❌ エラーが発生しました！\n\n" +
+                  "【原因の可能性】\n" +
+                  "1. GitHubに「" + fileName + "」というファイルが存在しない\n" +
+                  "2. ファイル名の大文字・小文字が1文字でも違う\n" +
+                  "3. まだGitHubに反映されていない（数分待つ）\n\n" +
+                  "現在のファイル設定: " + fileName);
+        };
+
         renderLyrics(); 
     }
 
-    // 再生・一時停止切り替え
+    // 再生・一時停止切り替え（エラーチェック付き）
     function togglePlay() {
         if (audio.paused) {
-            audio.play();
-            playIcon.style.display = 'none';
-            pauseIcon.style.display = 'block';
+            audio.play().then(() => {
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+            }).catch(error => {
+                console.error("再生失敗:", error);
+                alert("再生できませんでした。画面を一度クリックしてから再生ボタンを押してみてください。");
+            });
         } else {
             audio.pause();
             playIcon.style.display = 'block';
