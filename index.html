@@ -420,7 +420,11 @@
 
     let currentTrackIndex = 0;
     let isDragging = false;
-    let isVolumeDragging = false; // 音量バー操作中フラグ
+    let isVolumeDragging = false; 
+
+    // スクロール操作の検知用フラグ
+    let isUserScrollingLyrics = false;
+    let scrollTimeout;
 
     function init() {
         trackListEl.innerHTML = '';
@@ -443,6 +447,8 @@
         });
 
         renderLyrics();
+        setupMediaSession();
+        setupLyricsScrollDetection();
         
         audio.volume = 0.8;
         volumeBar.value = 80;
@@ -473,8 +479,21 @@
 
     function loadTrack(index) {
         const fileName = tracks[index].file;
-        currentTitleEl.innerText = tracks[index].title;
+        const title = tracks[index].title;
+        currentTitleEl.innerText = title;
         
+        // スマホ用バックグラウンド再生メタデータの更新
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: title,
+                artist: 'Official髭男dism',
+                album: 'Chessboard Player',
+                artwork: [
+                    { src: 'https://m.media-amazon.com/images/I/61bbOjt19WL._UXNaN_FMjpg_QL85_.jpg', sizes: '512x512', type: 'image/jpeg' }
+                ]
+            });
+        }
+
         audio.src = fileName;
         audio.load();
 
@@ -483,15 +502,9 @@
             playPromise.then(_ => {
                 updatePlayInterface(true);
             }).catch(error => {
-                console.log("Auto-play blocked or error:", error);
                 updatePlayInterface(false);
             });
         }
-
-        audio.onerror = function() {
-            console.error("Audio error:", audio.error);
-            alert("❌ 曲を読み込めませんでした: " + fileName + "\nGitHubの更新が反映されるまで1分ほど待ってから再読み込みしてください。");
-        };
 
         renderLyrics(); 
     }
@@ -524,6 +537,41 @@
         return `${min}:${sec < 10 ? '0' : ''}${sec}`;
     }
 
+    // --- バックグラウンド・ロック画面用操作の設定 ---
+    function setupMediaSession() {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setActionHandler('play', togglePlay);
+            navigator.mediaSession.setActionHandler('pause', togglePlay);
+            navigator.mediaSession.setActionHandler('previoustrack', () => {
+                currentTrackIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
+                loadTrack(currentTrackIndex);
+            });
+            navigator.mediaSession.setActionHandler('nexttrack', () => {
+                currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+                loadTrack(currentTrackIndex);
+            });
+        }
+    }
+
+    // --- ユーザーの歌詞スクロール検知 ---
+    function setupLyricsScrollDetection() {
+        const setScrollingFlag = () => {
+            isUserScrollingLyrics = true;
+            clearTimeout(scrollTimeout);
+            // 操作が止まってから2.5秒後に自動スクロール再開
+            scrollTimeout = setTimeout(() => {
+                isUserScrollingLyrics = false;
+                syncLyrics(audio.currentTime, false);
+            }, 2500);
+        };
+
+        // マウスやタッチでの操作を検知
+        const events = ['wheel', 'touchstart', 'touchmove', 'mousedown'];
+        events.forEach(event => {
+            lyricsContainer.addEventListener(event, setScrollingFlag);
+        });
+    }
+
     playBtn.addEventListener('click', togglePlay);
 
     backBtn.addEventListener('click', () => {
@@ -548,18 +596,23 @@
             const percent = (audio.currentTime / audio.duration) * 100;
             progressBar.value = isNaN(percent) ? 0 : percent;
             currentTimeEl.innerText = formatTime(audio.currentTime);
+            // 通常再生中のスクロール更新
+            syncLyrics(audio.currentTime, false);
         }
-        syncLyrics(audio.currentTime);
     });
 
     audio.addEventListener('loadedmetadata', () => {
         durationEl.innerText = formatTime(audio.duration);
     });
 
+    // --- シークバー操作時 ---
     progressBar.addEventListener('input', () => {
         isDragging = true;
         const time = (progressBar.value / 100) * audio.duration;
         currentTimeEl.innerText = formatTime(time);
+        
+        // シークバーを動かしている最中も歌詞を即座に連動させる
+        syncLyrics(time, true); 
     });
 
     progressBar.addEventListener('change', () => {
@@ -567,8 +620,6 @@
         audio.currentTime = (progressBar.value / 100) * audio.duration;
     });
 
-    // --- 音量操作イベント ---
-    // 1. スライダー操作時に音量を変更
     volumeBar.addEventListener('input', (e) => {
         isVolumeDragging = true;
         audio.volume = e.target.value / 100;
@@ -578,22 +629,17 @@
         isVolumeDragging = false;
     });
 
-    // 2. 音量（内部データ）が変更されたらスライダーを連動
     audio.addEventListener('volumechange', () => {
-        // スライダーを手動操作中以外の場合のみ、スライダー位置を自動更新
         if (!isVolumeDragging) {
             volumeBar.value = Math.round(audio.volume * 100);
         }
     });
 
-    // --- キーボード操作イベント ---
     document.addEventListener('keydown', (e) => {
-        // ホーム画面では無効
         if (!homeScreen.classList.contains('hidden')) return;
-
         switch(e.code) {
             case 'Space':
-                e.preventDefault(); // スクロール防止
+                e.preventDefault();
                 togglePlay();
                 break;
             case 'ArrowRight':
@@ -606,19 +652,19 @@
                 e.preventDefault();
                 audio.currentTime = Math.max(0, audio.currentTime - 10);
                 break;
-            // 音量操作（PCキーボードの矢印キー上下に対応）
             case 'ArrowUp':
                 e.preventDefault();
-                audio.volume = Math.min(1, audio.volume + 0.1); // 10%ずつアップ
+                audio.volume = Math.min(1, audio.volume + 0.1);
                 break;
             case 'ArrowDown':
                 e.preventDefault();
-                audio.volume = Math.max(0, audio.volume - 0.1); // 10%ずつダウン
+                audio.volume = Math.max(0, audio.volume - 0.1);
                 break;
         }
     });
 
-    function syncLyrics(currentTime) {
+    // forceScrollフラグを使って、スクラブ中は即座に、再生中はなめらかにスクロール
+    function syncLyrics(currentTime, forceScroll = false) {
         let activeIndex = -1;
         for (let i = 0; i < lyricsData.length; i++) {
             if (lyricsData[i].time <= currentTime) {
@@ -631,8 +677,15 @@
         const lines = document.querySelectorAll('.lyric-line');
         lines.forEach((line, index) => {
             if (index === activeIndex) {
-                if(!line.classList.contains('active')) {
-                    line.classList.add('active');
+                const isNewActive = !line.classList.contains('active');
+                line.classList.add('active');
+                
+                // シークバー操作中（強制スクロール）の場合
+                if (forceScroll) {
+                    line.scrollIntoView({ behavior: "auto", block: "center" }); // instant scroll
+                } 
+                // 通常再生中で、かつユーザーが手動でスクロールしていない場合
+                else if (isNewActive && !isUserScrollingLyrics) {
                     line.scrollIntoView({ behavior: "smooth", block: "center" });
                 }
             } else {
